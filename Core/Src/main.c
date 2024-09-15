@@ -70,6 +70,7 @@ uint32_t IWGD_systemTickSnapshot = 0;
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
