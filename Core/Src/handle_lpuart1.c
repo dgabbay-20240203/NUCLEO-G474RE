@@ -17,13 +17,15 @@
 #include "stm32g4xx_hal_uart.h"
 
 const unsigned char HELLO[] = "Message number:";
-unsigned char lpuart1_tx_buff[100];
+unsigned char lpuart1_tx_buff[200];
 unsigned long msgCounter = 0;
 uint8_t OkayToTransmit = 1;
 uint8_t userPB;
 uint8_t new_char = 0;
 uint32_t receiveCounter = 0;
 extern uint8_t IWDG_refreshEnabled;
+extern uint32_t count_HAL_ADC_ConvCpltCallback;
+extern uint32_t adc_val;
 
 void handle_lpuart1_communication(void)
 {
@@ -56,7 +58,7 @@ void handle_lpuart1_communication(void)
         {
             msgCounter++;
             OkayToTransmit = 0;
-            sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, Last_char = %d, receiveCounter = %lu\n", HELLO, msgCounter, userPB, new_char, receiveCounter);
+            sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, Last_char = %d, receiveCounter = %lu, count_HAL_ADC_ConvCpltCallback = %lu, adc_val = %lu\n", HELLO, msgCounter, userPB, new_char, receiveCounter, count_HAL_ADC_ConvCpltCallback, adc_val);
             HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
         }
     }

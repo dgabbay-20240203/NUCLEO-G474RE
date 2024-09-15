@@ -32,6 +32,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 void handle_lpuart1_communication(void);
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
+void read_adc3_IN1(void);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -64,6 +66,7 @@ uint32_t IWGD_systemTickSnapshot = 0;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 
 /* USER CODE END 0 */
 
@@ -103,7 +106,8 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-
+  // We need to start ADC3 for the first time from here.
+  HAL_ADC_Start_IT(&hadc3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -126,6 +130,7 @@ int main(void)
       }
 	  ToggleHeartbeatLED();
       handle_lpuart1_communication();
+      read_adc3_IN1();
   }
   /* USER CODE END 3 */
 }
@@ -244,7 +249,7 @@ static void MX_ADC3_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_12CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
