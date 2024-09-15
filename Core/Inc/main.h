@@ -36,7 +36,7 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+extern UART_HandleTypeDef hlpuart1;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -57,8 +57,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define USER_PUSH_BUTTON_Pin GPIO_PIN_13
-#define USER_PUSH_BUTTON_GPIO_Port GPIOC
+#define USER_PB_Pin GPIO_PIN_13
+#define USER_PB_GPIO_Port GPIOC
 #define USER_LED_Pin GPIO_PIN_5
 #define USER_LED_GPIO_Port GPIOA
 
