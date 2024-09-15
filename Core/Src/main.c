@@ -41,8 +41,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-COM_InitTypeDef BspCOMInit;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -92,19 +90,17 @@ int main(void)
 
   /* USER CODE END 2 */
 
-
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      if (HAL_GPIO_ReadPin(GPIOC, USER_PB_Pin) == 1)
+      if (HAL_GPIO_ReadPin(USER_PUSH_BUTTON_GPIO_Port, USER_PUSH_BUTTON_Pin) == 1)
       {
-    	  HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
+    	  HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_SET);
       }
       else
       {
-    	  HAL_GPIO_WritePin(GPIOA,LD2_Pin, GPIO_PIN_RESET);
+    	  HAL_GPIO_WritePin(USER_LED_GPIO_Port,USER_LED_Pin, GPIO_PIN_RESET);
       }
     /* USER CODE END WHILE */
 
@@ -175,20 +171,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : USER_PB_Pin */
-  GPIO_InitStruct.Pin = USER_PB_Pin;
+  /*Configure GPIO pin : USER_PUSH_BUTTON_Pin */
+  GPIO_InitStruct.Pin = USER_PUSH_BUTTON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USER_PB_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(USER_PUSH_BUTTON_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pin : USER_LED_Pin */
+  GPIO_InitStruct.Pin = USER_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(USER_LED_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

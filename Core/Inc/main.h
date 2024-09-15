@@ -28,8 +28,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_hal.h"
-#include "stm32g4xx_nucleo.h"
-#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -59,10 +57,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define USER_PB_Pin GPIO_PIN_13
-#define USER_PB_GPIO_Port GPIOC
-#define LD2_Pin GPIO_PIN_5
-#define LD2_GPIO_Port GPIOA
+#define USER_PUSH_BUTTON_Pin GPIO_PIN_13
+#define USER_PUSH_BUTTON_GPIO_Port GPIOC
+#define USER_LED_Pin GPIO_PIN_5
+#define USER_LED_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
