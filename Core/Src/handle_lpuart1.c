@@ -51,7 +51,7 @@ void handle_lpuart1_communication(void)
         IWDG_refreshEnabled = 0;
     }
 
-    if ((HAL_GetTick() - systemTickSnapshot) >= 100)
+    if ((HAL_GetTick() - systemTickSnapshot) >= 1000)
     {
         systemTickSnapshot = HAL_GetTick();
 	    if (OkayToTransmit != 0)
