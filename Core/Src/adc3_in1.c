@@ -7,6 +7,7 @@ uint8_t conversionIsReay = 0;
 extern ADC_HandleTypeDef hadc3;
 uint32_t ADC3_systemTickSnapshot = 0;
 uint32_t adc_val;
+uint32_t adc3_IN3_voltage;
 uint32_t timer = 0;
 
 void read_adc3_IN1(void)
@@ -20,6 +21,7 @@ void read_adc3_IN1(void)
         if (conversionIsReay == 1)
         {
             adc_val = HAL_ADC_GetValue(&hadc3);
+            adc3_IN3_voltage = (adc_val * 33 * 10) / 4095;
             conversionIsReay = 0;
             HAL_ADC_Start_IT(&hadc3);
         }

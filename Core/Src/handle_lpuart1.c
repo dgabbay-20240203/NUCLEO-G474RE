@@ -26,6 +26,7 @@ uint32_t receiveCounter = 0;
 extern uint8_t IWDG_refreshEnabled;
 extern uint32_t count_HAL_ADC_ConvCpltCallback;
 extern uint32_t adc_val;
+extern uint32_t adc3_IN3_voltage;
 
 void handle_lpuart1_communication(void)
 {
@@ -58,7 +59,7 @@ void handle_lpuart1_communication(void)
         {
             msgCounter++;
             OkayToTransmit = 0;
-            sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, Last_char = %d, receiveCounter = %lu, count_HAL_ADC_ConvCpltCallback = %lu, adc_val = %lu\n", HELLO, msgCounter, userPB, new_char, receiveCounter, count_HAL_ADC_ConvCpltCallback, adc_val);
+            sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, Last_char = %d, receiveCounter = %lu, adc3_IN3_voltage = %lu.%luV, adc_val = %lu\n", HELLO, msgCounter, userPB, new_char, receiveCounter, adc3_IN3_voltage /100,adc3_IN3_voltage % 100 , adc_val);
             HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
         }
     }
