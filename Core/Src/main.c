@@ -65,11 +65,33 @@ static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 uint8_t IWDG_refreshEnabled = 1;
 uint32_t IWGD_systemTickSnapshot = 0;
+uint32_t FDCAN_systemTickSnapshot = 0;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+FDCAN_TxHeaderTypeDef TxHeader;
+FDCAN_RxHeaderTypeDef RxHeader;
+uint8_t TxData[12];
+uint8_t RxData[12];
+int indx = 0;
 
+// FDCAN1 Callback
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
+{
+    if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET)
+    {
+        if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+        {
+            Error_Handler();
+        }
+
+        if (HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK)
+        {
+            Error_Handler();
+        }
+    }
+}
 
 /* USER CODE END 0 */
 
@@ -88,7 +110,7 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
+  uint64_t *x = (uint64_t *) &TxData[0];
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -110,6 +132,28 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
+  // Start FDCAN1
+    if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK)
+    {
+  	  Error_Handler();
+    }
+
+    if (HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK)
+    {
+  	  /* Notification Error */
+  	  Error_Handler();
+    }
+
+    // Configure TX Header for FDCAN1
+    TxHeader.Identifier = 0x11;
+    TxHeader.IdType = FDCAN_STANDARD_ID;
+    TxHeader.TxFrameType = FDCAN_DATA_FRAME;
+    TxHeader.DataLength = FDCAN_DLC_BYTES_8;
+    TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+    TxHeader.BitRateSwitch = FDCAN_BRS_OFF;
+    TxHeader.FDFormat = FDCAN_FD_CAN;
+    TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+    TxHeader.MessageMarker = 0;
   // We need to start ADC3 for the first time from here.
   HAL_ADC_Start_IT(&hadc3);
   /* USER CODE END 2 */
@@ -135,6 +179,16 @@ int main(void)
 	  ToggleHeartbeatLED();
       handle_lpuart1_communication();
       read_adc3_IN1();
+
+      if ((HAL_GetTick() - FDCAN_systemTickSnapshot) >= 100)
+      {
+    	  FDCAN_systemTickSnapshot = HAL_GetTick();
+          if (HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, TxData) != HAL_OK)
+          {
+        	  Error_Handler();
+          }
+          (*x)++;
+      }
   }
   /* USER CODE END 3 */
 }
