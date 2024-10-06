@@ -22,6 +22,8 @@ uint8_t userPB;
 const unsigned char HELLO[] = "Message number:";
 extern uint32_t adc3_IN3_voltage;
 extern uint32_t adc_val;
+extern uint8_t IWDG_refreshEnabled;
+
 static void CommandLineMode (void);
 
 unsigned char ConvertStringToIndex (unsigned char *userCmd,
@@ -39,7 +41,8 @@ static void ReportFirmwareVersion (void);
 
 const char * const commadModeFunctions[NUM_OF_COM]= {
 "fver",    // Report firmware version and build timestamp.
-"dump"
+"dump",
+"Iwdg"
 };
 
 void handle_lpuart1_communication(void)
@@ -104,6 +107,14 @@ static void CommandLineMode (void)
         case 1:
         	SwitchToDumpMode(&comm_tokens);
         	break;
+        case 2:
+            if (comm_tokens.numOfTokens == 1)
+            {
+                IWDG_refreshEnabled = 0;
+                sprintf((char *) lpuart1_tx_buff, "Forcing IWDG reset.\r\n");
+                HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+            }
+            break;
         default:
 
         	break;
