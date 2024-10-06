@@ -23,6 +23,8 @@ const unsigned char HELLO[] = "Message number:";
 extern uint32_t adc3_IN3_voltage;
 extern uint32_t adc_val;
 extern uint8_t IWDG_refreshEnabled;
+extern uint32_t CAN_received_messages_counter;
+extern uint8_t CAN_Tx_enabled;
 
 static void CommandLineMode (void);
 
@@ -42,7 +44,8 @@ static void ReportFirmwareVersion (void);
 const char * const commadModeFunctions[NUM_OF_COM]= {
 "fver",    // Report firmware version and build timestamp.
 "dump",
-"Iwdg"
+"Iwdg",
+"cantx"
 };
 
 void handle_lpuart1_communication(void)
@@ -79,7 +82,7 @@ void handle_lpuart1_communication(void)
 
                 systemTickSnapshot = HAL_GetTick();
                 msgCounter++;
-                sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, adc3_IN3_voltage = %lu.%luV, adc_val = %lu\n", HELLO, msgCounter, userPB, adc3_IN3_voltage /100,adc3_IN3_voltage % 100 , adc_val);
+                sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, adc3_IN3_voltage = %lu.%luV, adc_val = %lu, CAN_received_messages_counter = %lu\n", HELLO, msgCounter, userPB, adc3_IN3_voltage /100,adc3_IN3_voltage % 100 , adc_val, CAN_received_messages_counter);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
         	    break;
@@ -115,6 +118,12 @@ static void CommandLineMode (void)
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
             break;
+        case 3: // Enable/ disable CAN transmission
+        	if (comm_tokens.numOfTokens == 2)
+        	{
+        		CAN_Tx_enabled = (int8_t) atoi((const char *) comm_tokens.commandTok[1]);
+        	}
+        	break;
         default:
 
         	break;

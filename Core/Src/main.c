@@ -66,6 +66,7 @@ static void MX_NVIC_Init(void);
 uint8_t IWDG_refreshEnabled = 1;
 uint32_t IWGD_systemTickSnapshot = 0;
 uint32_t FDCAN_systemTickSnapshot = 0;
+uint32_t CAN_received_messages_counter = 0;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -75,6 +76,7 @@ FDCAN_RxHeaderTypeDef RxHeader;
 uint8_t TxData[12];
 uint8_t RxData[12];
 int indx = 0;
+uint8_t CAN_Tx_enabled = 0;
 
 // FDCAN1 Callback
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
@@ -91,6 +93,8 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             Error_Handler();
         }
     }
+
+    CAN_received_messages_counter++;
 }
 
 /* USER CODE END 0 */
@@ -180,7 +184,7 @@ int main(void)
       handle_lpuart1_communication();
       read_adc3_IN1();
 
-      if ((HAL_GetTick() - FDCAN_systemTickSnapshot) >= 100)
+      if ((CAN_Tx_enabled != 0) && (HAL_GetTick() - FDCAN_systemTickSnapshot) >= 100)
       {
     	  FDCAN_systemTickSnapshot = HAL_GetTick();
           if (HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, TxData) != HAL_OK)
