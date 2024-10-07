@@ -77,7 +77,6 @@ uint8_t TxData[12];
 uint8_t RxData[12];
 int indx = 0;
 uint8_t CAN_Tx_enabled = 0;
-uint64_t *x = (uint64_t *) &TxData[0];
 
 // FDCAN1 Callback
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
@@ -108,7 +107,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  uint8_t i;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -162,7 +161,7 @@ int main(void)
   // We need to start ADC3 for the first time from here.
   HAL_ADC_Start_IT(&hadc3);
   /* USER CODE END 2 */
-
+  for (i = 0; i < 8; i++) TxData[i] = i;
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
@@ -192,7 +191,6 @@ int main(void)
           {
         	  Error_Handler();
           }
-          (*x)++;
       }
   }
   /* USER CODE END 3 */
