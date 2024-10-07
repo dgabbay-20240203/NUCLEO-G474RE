@@ -77,6 +77,7 @@ uint8_t TxData[12];
 uint8_t RxData[12];
 int indx = 0;
 uint8_t CAN_Tx_enabled = 0;
+uint64_t *x = (uint64_t *) &TxData[0];
 
 // FDCAN1 Callback
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
@@ -114,7 +115,7 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-  uint64_t *x = (uint64_t *) &TxData[0];
+
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
