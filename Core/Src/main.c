@@ -149,8 +149,8 @@ int main(void)
     }
 
     // Configure TX Header for FDCAN1
-    TxHeader.Identifier = 0x11;
-    TxHeader.IdType = FDCAN_STANDARD_ID;
+    TxHeader.Identifier = 0x12345678;
+    TxHeader.IdType = FDCAN_EXTENDED_ID;
     TxHeader.TxFrameType = FDCAN_DATA_FRAME;
     TxHeader.DataLength = FDCAN_DLC_BYTES_8;
     TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
@@ -161,7 +161,7 @@ int main(void)
   // We need to start ADC3 for the first time from here.
   HAL_ADC_Start_IT(&hadc3);
   /* USER CODE END 2 */
-  for (i = 0; i < 8; i++) TxData[i] = i;
+  for (i = 0; i < 8; i++) TxData[i] = 0;
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
@@ -186,6 +186,15 @@ int main(void)
 
       if ((CAN_Tx_enabled != 0) && (HAL_GetTick() - FDCAN_systemTickSnapshot) >= 100)
       {
+          TxData[0] -= 1;
+          TxData[1] += 1;
+          TxData[2] -= 2;
+          TxData[3] += 2;
+          TxData[4] -= 3;
+          TxData[5] += 3;
+          TxData[6] -= 4;
+          TxData[7] += 4;
+
     	  FDCAN_systemTickSnapshot = HAL_GetTick();
           if (HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, TxData) != HAL_OK)
           {

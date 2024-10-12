@@ -12,6 +12,7 @@ Date: 05 October 2024
 #include "proc_shell_comm.h"
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_uart.h"
+//#include "main.h"
 /*****************************************/
 
 commandTokens comm_tokens;
@@ -25,6 +26,9 @@ extern uint32_t adc_val;
 extern uint8_t IWDG_refreshEnabled;
 extern uint32_t CAN_received_messages_counter;
 extern uint8_t CAN_Tx_enabled;
+extern uint32_t CAN_received_messages_counter;
+extern uint8_t RxData[12];
+extern FDCAN_RxHeaderTypeDef RxHeader;
 
 static void CommandLineMode (void);
 
@@ -53,11 +57,13 @@ void handle_lpuart1_communication(void)
     static uint32_t systemTickSnapshot = 0;
     static unsigned long msgCounter = 0;
 	static char first_time_only = 1;
+	static uint32_t old_CAN_received_messages_counter = 0;
 
 	if (first_time_only == 1)
 	{
 		first_time_only = 0;
 		HAL_UART_Receive_IT(&hlpuart1, (unsigned char *) &new_char, 1);
+		old_CAN_received_messages_counter = CAN_received_messages_counter;
 	}
 
     if (dump_mode == 0)
@@ -82,10 +88,19 @@ void handle_lpuart1_communication(void)
 
                 systemTickSnapshot = HAL_GetTick();
                 msgCounter++;
-                sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, adc3_IN3_voltage = %lu.%luV, adc_val = %lu, CAN_received_messages_counter = %lu\n", HELLO, msgCounter, userPB, adc3_IN3_voltage /100,adc3_IN3_voltage % 100 , adc_val, CAN_received_messages_counter);
+                sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, adc3_IN3_voltage = %lu.%luV, adc_val = %lu\n", HELLO, msgCounter, userPB, adc3_IN3_voltage /100,adc3_IN3_voltage % 100 , adc_val);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
         	    break;
+        case 2:
+                if (old_CAN_received_messages_counter != CAN_received_messages_counter)
+                {
+                    // We have a new CAN message
+                    sprintf((char *) lpuart1_tx_buff, "CAN message (%lu): ID =  %08X, Payload = %02X %02X %02X %02X %02X %02X %02X %02X \n", CAN_received_messages_counter,(unsigned int) RxHeader.Identifier ,RxData[0], RxData[1], RxData[2], RxData[3], RxData[4], RxData[5], RxData[6], RxData[7]);
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                }
+                old_CAN_received_messages_counter = CAN_received_messages_counter;
+                break;
         default:
         	dump_mode = 0;
         	break;
@@ -160,17 +175,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     	dump_mode = 0;
     }
     else
-    if (new_char == CR_ENTER)
+    if(dump_mode == 0)
     {
-    	messageReadyToBeProcessed = 1;
-    	lpuart1_rx_buff[recIndex] = 0; // Terminate the command line string with NULL character.
-    	recIndex = 0;
-    }
-    else
-    {
-        if (recIndex < sizeof(lpuart1_rx_buff) - 1)
+        if (new_char == CR_ENTER)
         {
-        	lpuart1_rx_buff[recIndex++] = new_char;
+            messageReadyToBeProcessed = 1;
+            lpuart1_rx_buff[recIndex] = 0; // Terminate the command line string with NULL character.
+            recIndex = 0;
+        }
+        else
+        {
+            if (recIndex < sizeof(lpuart1_rx_buff) - 1)
+            {
+                lpuart1_rx_buff[recIndex++] = new_char;
+            }
         }
     }
 }
