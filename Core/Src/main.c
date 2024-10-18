@@ -326,7 +326,7 @@ static void MX_ADC3_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN ADC3_Init 2 */
-
+  HAL_ADCEx_Calibration_Start(&hadc3, ADC_SINGLE_ENDED);
   /* USER CODE END ADC3_Init 2 */
 
 }
