@@ -177,6 +177,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     else
     if(dump_mode == 0)
     {
+        if (new_char == BACKSPACE)
+        {
+            if (recIndex > 0)
+            {
+                recIndex--;
+            }
+        }
+        else
         if (new_char == CR_ENTER)
         {
             messageReadyToBeProcessed = 1;
