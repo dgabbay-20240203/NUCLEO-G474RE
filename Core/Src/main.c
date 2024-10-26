@@ -73,7 +73,7 @@ uint32_t CAN_received_messages_counter = 0;
 /* USER CODE BEGIN 0 */
 FDCAN_TxHeaderTypeDef TxHeader;
 FDCAN_RxHeaderTypeDef RxHeader;
-uint8_t TxData[12];
+uint8_t TxData[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t RxData[12];
 int indx = 0;
 uint8_t CAN_Tx_enabled = 0;
@@ -107,7 +107,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  uint8_t i;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -161,7 +161,6 @@ int main(void)
   // We need to start ADC3 for the first time from here.
   HAL_ADC_Start_IT(&hadc3);
   /* USER CODE END 2 */
-  for (i = 0; i < 8; i++) TxData[i] = 0;
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
