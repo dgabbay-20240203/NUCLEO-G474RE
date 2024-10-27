@@ -12,6 +12,8 @@ Date: 05 October 2024
 #include "proc_shell_comm.h"
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_uart.h"
+#include "stm32g4xx_hal_rng.h"
+
 //#include "main.h"
 /*****************************************/
 
@@ -29,6 +31,7 @@ extern uint8_t CAN_Tx_enabled;
 extern uint32_t CAN_received_messages_counter;
 extern uint8_t RxData[12];
 extern FDCAN_RxHeaderTypeDef RxHeader;
+extern RNG_HandleTypeDef hrng;
 
 static void CommandLineMode (void);
 
@@ -42,6 +45,7 @@ static void SwitchToDumpMode(commandTokens *commTokPtr);
 uint8_t lpuart1_tx_buff[200];
 uint8_t lpuart1_rx_buff[200];
 uint8_t messageReadyToBeProcessed = 0;
+uint8_t rng_data_rdy = 0;
 
 static void ReportFirmwareVersion (void);
 
@@ -49,7 +53,8 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "fver",    // Report firmware version and build timestamp.
 "dump",
 "Iwdg",
-"cantx"
+"cantx",
+"rng"
 };
 
 void handle_lpuart1_communication(void)
@@ -139,6 +144,14 @@ static void CommandLineMode (void)
         		CAN_Tx_enabled = (int8_t) atoi((const char *) comm_tokens.commandTok[1]);
         	}
         	break;
+        case 4: // rng
+        	rng_data_rdy = 0;
+        	HAL_RNG_GenerateRandomNumber_IT(&hrng);
+        	while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
+//            sprintf((char *) lpuart1_tx_buff, " %lu = %02X%02X%02X%02X\r\n", hrng.RandomNumber, (uint8_t) ((hrng.RandomNumber & 0xFF000000) >> 24),
+//            		(uint8_t) ((hrng.RandomNumber & 0x00FF0000) >> 16), (uint8_t) ((hrng.RandomNumber & 0x0000FF00) >> 8), (uint8_t) ((hrng.RandomNumber & 0x000000FF)));
+        	sprintf((char *) lpuart1_tx_buff, "%lu\r\n", hrng.RandomNumber);
+            HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
         default:
 
         	break;
@@ -208,6 +221,16 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
   //OkayToTransmit = 1;
   /* NOTE : This function should not be modified, when the callback is needed,
             the HAL_UART_TxCpltCallback can be implemented in the user file.
+   */
+}
+
+void HAL_RNG_ReadyDataCallback(RNG_HandleTypeDef *hrng, uint32_t random32bit)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(hrng);
+  rng_data_rdy = 1;
+  /* NOTE : This function should not be modified. When the callback is needed,
+            function HAL_RNG_ErrorCallback must be implemented in the user file.
    */
 }
 
