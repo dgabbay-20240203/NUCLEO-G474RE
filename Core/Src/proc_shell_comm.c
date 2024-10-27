@@ -106,6 +106,17 @@ void handle_lpuart1_communication(void)
                 }
                 old_CAN_received_messages_counter = CAN_received_messages_counter;
                 break;
+        case 3:
+            if ((HAL_GetTick() - systemTickSnapshot) >= 1000)
+            {
+                systemTickSnapshot = HAL_GetTick();
+                rng_data_rdy = 0;
+                HAL_RNG_GenerateRandomNumber_IT(&hrng);
+                while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
+                sprintf((char *) lpuart1_tx_buff, "%lu\n", hrng.RandomNumber);
+                HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+            }
+            break;
         default:
         	dump_mode = 0;
         	break;
