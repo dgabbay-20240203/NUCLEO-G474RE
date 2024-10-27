@@ -116,6 +116,7 @@ void handle_lpuart1_communication(void)
 static void CommandLineMode (void)
 {
     unsigned char i = 0;
+    uint8_t *ptr;
 
     if (messageReadyToBeProcessed == 1)
     {
@@ -147,10 +148,9 @@ static void CommandLineMode (void)
         case 4: // rng
         	rng_data_rdy = 0;
         	HAL_RNG_GenerateRandomNumber_IT(&hrng);
-        	while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
-//            sprintf((char *) lpuart1_tx_buff, " %lu = %02X%02X%02X%02X\r\n", hrng.RandomNumber, (uint8_t) ((hrng.RandomNumber & 0xFF000000) >> 24),
-//            		(uint8_t) ((hrng.RandomNumber & 0x00FF0000) >> 16), (uint8_t) ((hrng.RandomNumber & 0x0000FF00) >> 8), (uint8_t) ((hrng.RandomNumber & 0x000000FF)));
-        	sprintf((char *) lpuart1_tx_buff, "%lu\r\n", hrng.RandomNumber);
+            while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
+            ptr = (uint8_t *) &hrng.RandomNumber;
+            sprintf((char *) lpuart1_tx_buff, "%lu = %02X%02X%02X%02X\r\n", hrng.RandomNumber, *(ptr + 3), *(ptr + 2), *(ptr + 1), *ptr);
             HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
         default:
 
