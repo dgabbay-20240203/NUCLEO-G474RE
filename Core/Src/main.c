@@ -69,6 +69,7 @@ static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 uint8_t IWDG_refreshEnabled = 1;
 uint32_t IWGD_systemTickSnapshot = 0;
+uint8_t SendMessage_IWDG_resetOccurred = 0;
 uint32_t FDCAN_systemTickSnapshot = 0;
 uint32_t CAN_received_messages_counter = 0;
 /* USER CODE END PFP */
@@ -127,7 +128,11 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  if (RCC->CSR & RCC_CSR_IWDGRSTF)
+  {
+    // This was IWDG
+      SendMessage_IWDG_resetOccurred = 1;
+  }
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */

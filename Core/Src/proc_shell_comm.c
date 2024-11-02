@@ -33,6 +33,7 @@ extern uint32_t CAN_received_messages_counter;
 extern uint8_t RxData[12];
 extern FDCAN_RxHeaderTypeDef RxHeader;
 extern RNG_HandleTypeDef hrng;
+extern uint8_t SendMessage_IWDG_resetOccurred;
 
 static void CommandLineMode (void);
 
@@ -127,6 +128,13 @@ static void CommandLineMode (void)
 {
     unsigned char i = 0;
 
+    if (SendMessage_IWDG_resetOccurred == 1)
+    {
+        SendMessage_IWDG_resetOccurred = 0;
+        sprintf((char *) lpuart1_tx_buff, "IWDG reset occurred!\r\n");
+        HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+    }
+
     if (messageReadyToBeProcessed == 1)
     {
         messageReadyToBeProcessed = 0;
@@ -144,8 +152,6 @@ static void CommandLineMode (void)
             if (comm_tokens.numOfTokens == 1)
             {
                 IWDG_refreshEnabled = 0;
-                sprintf((char *) lpuart1_tx_buff, "Forcing IWDG reset.\r\n");
-                HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
             break;
         case 3: // Enable/ disable CAN transmission
