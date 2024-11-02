@@ -108,7 +108,7 @@ void handle_lpuart1_communication(void)
                 old_CAN_received_messages_counter = CAN_received_messages_counter;
                 break;
         case 3:
-            if ((HAL_GetTick() - systemTickSnapshot) >= 1000)
+            if ((HAL_GetTick() - systemTickSnapshot) >= 400) // Changing the period to less than 400 milliseconds may trigger a watchdog reset.
             {
                 systemTickSnapshot = HAL_GetTick();
                 rng_data_rdy = 0;
