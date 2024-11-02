@@ -46,7 +46,6 @@ static void SwitchToDumpMode(commandTokens *commTokPtr);
 uint8_t lpuart1_tx_buff[200];
 uint8_t lpuart1_rx_buff[200];
 uint8_t messageReadyToBeProcessed = 0;
-uint8_t rng_data_rdy = 0;
 
 static void ReportFirmwareVersion (void);
 
@@ -64,6 +63,7 @@ void handle_lpuart1_communication(void)
     static unsigned long msgCounter = 0;
     static char first_time_only = 1;
     static uint32_t old_CAN_received_messages_counter = 0;
+    uint32_t rnd_num;
 
     if (first_time_only == 1)
     {
@@ -108,13 +108,11 @@ void handle_lpuart1_communication(void)
                 old_CAN_received_messages_counter = CAN_received_messages_counter;
                 break;
         case 3:
-            if ((HAL_GetTick() - systemTickSnapshot) >= 400) // Changing the period to less than 400 milliseconds may trigger a watchdog reset.
+            if ((HAL_GetTick() - systemTickSnapshot) >= 100) // Changing the period to less than 400 milliseconds may trigger a watchdog reset.
             {
                 systemTickSnapshot = HAL_GetTick();
-                rng_data_rdy = 0;
-                HAL_RNG_GenerateRandomNumber_IT(&hrng);
-                while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
-                sprintf((char *) lpuart1_tx_buff, "%lu\n", hrng.RandomNumber);
+                HAL_RNG_GenerateRandomNumber(&hrng, &rnd_num);
+                sprintf((char *) lpuart1_tx_buff, "%lu\n", rnd_num);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
             break;
@@ -185,6 +183,7 @@ void Generate_256BIT_RandomSeed(void)
     static uint32_t randomSeed[8];
     static uint8_t  indx = 0;
     static uint32_t systemTickSnapshot;
+    uint32_t rnd_num;
     uint8_t *ptr = (uint8_t *) &randomSeed[0];
 
     if (generate_rand_seed == 0)
@@ -195,10 +194,8 @@ void Generate_256BIT_RandomSeed(void)
     switch (generate_rand_seed)
     {
     case 1:
-        rng_data_rdy = 0;
-        HAL_RNG_GenerateRandomNumber_IT(&hrng);
-        while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
-        randomSeed[indx++] = hrng.RandomNumber;
+        HAL_RNG_GenerateRandomNumber(&hrng, &rnd_num);
+        randomSeed[indx++] = rnd_num;
 
         if (indx < 8)
         {
@@ -277,13 +274,5 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
    */
 }
 
-void HAL_RNG_ReadyDataCallback(RNG_HandleTypeDef *hrng, uint32_t random32bit)
-{
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(hrng);
-  rng_data_rdy = 1;
-  /* NOTE : This function should not be modified. When the callback is needed,
-            function HAL_RNG_ErrorCallback must be implemented in the user file.
-   */
-}
+
 
