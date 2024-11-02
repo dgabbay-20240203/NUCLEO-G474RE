@@ -21,6 +21,7 @@ commandTokens comm_tokens;
 extern UART_HandleTypeDef hlpuart1;
 uint8_t new_char = 0;
 static uint8_t dump_mode = 0;
+static uint8_t generate_rand_seed = 0;
 uint8_t userPB;
 const unsigned char HELLO[] = "Message number:";
 extern uint32_t adc3_IN3_voltage;
@@ -54,26 +55,26 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "dump",
 "Iwdg",
 "cantx",
-"rng"
+"getseed"
 };
 
 void handle_lpuart1_communication(void)
 {
     static uint32_t systemTickSnapshot = 0;
     static unsigned long msgCounter = 0;
-	static char first_time_only = 1;
-	static uint32_t old_CAN_received_messages_counter = 0;
+    static char first_time_only = 1;
+    static uint32_t old_CAN_received_messages_counter = 0;
 
-	if (first_time_only == 1)
-	{
-		first_time_only = 0;
-		HAL_UART_Receive_IT(&hlpuart1, (unsigned char *) &new_char, 1);
-		old_CAN_received_messages_counter = CAN_received_messages_counter;
-	}
+    if (first_time_only == 1)
+    {
+        first_time_only = 0;
+        HAL_UART_Receive_IT(&hlpuart1, (unsigned char *) &new_char, 1);
+        old_CAN_received_messages_counter = CAN_received_messages_counter;
+    }
 
     if (dump_mode == 0)
     {
-    	CommandLineMode ();
+        CommandLineMode ();
     }
     else
     {
@@ -84,11 +85,11 @@ void handle_lpuart1_communication(void)
             {
                 if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1)
                 {
-                	userPB = 1;
+                    userPB = 1;
                 }
                 else
                 {
-                	userPB = 0;
+                    userPB = 0;
                 }
 
                 systemTickSnapshot = HAL_GetTick();
@@ -96,7 +97,7 @@ void handle_lpuart1_communication(void)
                 sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, adc3_IN3_voltage = %lu.%luV, adc_val = %lu\n", HELLO, msgCounter, userPB, adc3_IN3_voltage /100,adc3_IN3_voltage % 100 , adc_val);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
-        	    break;
+                break;
         case 2:
                 if (old_CAN_received_messages_counter != CAN_received_messages_counter)
                 {
@@ -118,8 +119,8 @@ void handle_lpuart1_communication(void)
             }
             break;
         default:
-        	dump_mode = 0;
-        	break;
+            dump_mode = 0;
+            break;
         }
     }
 }
@@ -127,21 +128,20 @@ void handle_lpuart1_communication(void)
 static void CommandLineMode (void)
 {
     unsigned char i = 0;
-    uint8_t *ptr;
 
     if (messageReadyToBeProcessed == 1)
     {
-    	messageReadyToBeProcessed = 0;
+        messageReadyToBeProcessed = 0;
         commandLnTokens (&comm_tokens, lpuart1_rx_buff, sizeof(lpuart1_rx_buff));
         i = ConvertStringToIndex (comm_tokens.commandTok[0],(const unsigned char **)commadModeFunctions,NUM_OF_COM);
         switch(i)
         {
         case 0:
-        	ReportFirmwareVersion();
-        	break;
+            ReportFirmwareVersion();
+            break;
         case 1:
-        	SwitchToDumpMode(&comm_tokens);
-        	break;
+            SwitchToDumpMode(&comm_tokens);
+            break;
         case 2:
             if (comm_tokens.numOfTokens == 1)
             {
@@ -151,21 +151,16 @@ static void CommandLineMode (void)
             }
             break;
         case 3: // Enable/ disable CAN transmission
-        	if (comm_tokens.numOfTokens == 2)
-        	{
-        		CAN_Tx_enabled = (int8_t) atoi((const char *) comm_tokens.commandTok[1]);
-        	}
-        	break;
-        case 4: // rng
-        	rng_data_rdy = 0;
-        	HAL_RNG_GenerateRandomNumber_IT(&hrng);
-            while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
-            ptr = (uint8_t *) &hrng.RandomNumber;
-            sprintf((char *) lpuart1_tx_buff, "%lu = %02X%02X%02X%02X\r\n", hrng.RandomNumber, *(ptr + 3), *(ptr + 2), *(ptr + 1), *ptr);
-            HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+            if (comm_tokens.numOfTokens == 2)
+            {
+                CAN_Tx_enabled = (int8_t) atoi((const char *) comm_tokens.commandTok[1]);
+            }
+            break;
+        case 4: // getseed
+            generate_rand_seed = 1;
         default:
 
-        	break;
+            break;
         }
     }
 }
@@ -185,6 +180,53 @@ static void ReportFirmwareVersion(void)
     HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
 }
 
+void Generate_256BIT_RandomSeed(void)
+{
+    static uint32_t randomSeed[8];
+    static uint8_t  indx = 0;
+    static uint32_t systemTickSnapshot;
+    uint8_t *ptr = (uint8_t *) &randomSeed[0];
+
+    if (generate_rand_seed == 0)
+    {
+        return;
+    }
+
+    switch (generate_rand_seed)
+    {
+    case 1:
+        rng_data_rdy = 0;
+        HAL_RNG_GenerateRandomNumber_IT(&hrng);
+        while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
+        randomSeed[indx++] = hrng.RandomNumber;
+
+        if (indx < sizeof(randomSeed) - 1)
+        {
+            generate_rand_seed = 2;
+            systemTickSnapshot = HAL_GetTick();
+        }
+        else
+        {
+            generate_rand_seed = 0;
+            indx = 0;
+            sprintf((char *) lpuart1_tx_buff, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
+                    *(ptr +31), *(ptr +30),  *(ptr +29), *(ptr +28), *(ptr +27), *(ptr +26), *(ptr +25), *(ptr +24), *(ptr +23), *(ptr + 22),
+                    *(ptr + 21),*(ptr + 20), *(ptr + 19),*(ptr + 18),*(ptr + 17),*(ptr + 16),*(ptr + 15),*(ptr +14), *(ptr + 13),*(ptr + 12),
+                    *(ptr + 11),*(ptr + 10),*(ptr + 9),  *(ptr + 8), *(ptr + 7), *(ptr + 6), *(ptr + 5), *(ptr + 4), *(ptr + 3), *(ptr + 2),
+                    *(ptr + 1), *ptr);
+            HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+        }
+        break;
+    case 2:
+        if (HAL_GetTick() > systemTickSnapshot + 2)
+        {
+            generate_rand_seed = 1;
+        }
+        break;
+
+    }
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   /* Prevent unused argument(s) compilation warning */
@@ -196,7 +238,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (new_char == CTRL_C)
     {
         // Terminate "dump" mode.
-    	dump_mode = 0;
+        dump_mode = 0;
     }
     else
     if(dump_mode == 0)

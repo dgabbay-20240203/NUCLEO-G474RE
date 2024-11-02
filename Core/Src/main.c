@@ -34,6 +34,7 @@
 void handle_lpuart1_communication(void);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
 void read_adc3_IN1(void);
+void Generate_256BIT_RandomSeed(void);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -187,6 +188,7 @@ int main(void)
 	  ToggleHeartbeatLED();
       handle_lpuart1_communication();
       read_adc3_IN1();
+      Generate_256BIT_RandomSeed();
 
       if ((CAN_Tx_enabled != 0) && (HAL_GetTick() - FDCAN_systemTickSnapshot) >= 100)
       {
