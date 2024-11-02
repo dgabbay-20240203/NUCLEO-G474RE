@@ -200,7 +200,7 @@ void Generate_256BIT_RandomSeed(void)
         while (rng_data_rdy == 0); // Wait for the random number generator to do its job.
         randomSeed[indx++] = hrng.RandomNumber;
 
-        if (indx < sizeof(randomSeed) - 1)
+        if (indx < 8)
         {
             generate_rand_seed = 2;
             systemTickSnapshot = HAL_GetTick();
