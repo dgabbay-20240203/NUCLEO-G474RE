@@ -132,6 +132,7 @@ int main(void)
   {
     // This was IWDG
       SendMessage_IWDG_resetOccurred = 1;
+      __HAL_RCC_CLEAR_RESET_FLAGS(); // Must clear reset status flags.
   }
   /* USER CODE END SysInit */
 
