@@ -163,7 +163,11 @@ static void CommandLineMode (void)
         case 4: // getseed
             generate_rand_seed = 1;
         default:
-
+            if (comm_tokens.numOfTokens != 0)
+            {
+                sprintf((char *) lpuart1_tx_buff, "Unrecognized command!\r\n");
+                HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+            }
             break;
         }
     }
