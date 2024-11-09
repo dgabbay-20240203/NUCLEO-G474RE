@@ -162,6 +162,7 @@ static void CommandLineMode (void)
             break;
         case 4: // getseed
             generate_rand_seed = 1;
+            break;
         default:
             if (comm_tokens.numOfTokens != 0)
             {
