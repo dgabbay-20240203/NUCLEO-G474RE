@@ -17,6 +17,8 @@ Date: 05 October 2024
 //#include "main.h"
 /*****************************************/
 
+
+extern uint8_t  I2C1_Error;
 commandTokens comm_tokens;
 extern UART_HandleTypeDef hlpuart1;
 uint8_t new_char = 0;
@@ -35,6 +37,8 @@ extern FDCAN_RxHeaderTypeDef RxHeader;
 extern RNG_HandleTypeDef hrng;
 extern uint8_t SendMessage_IWDG_resetOccurred;
 
+
+void Transmit_I2C1(void);
 static void CommandLineMode (void);
 
 unsigned char ConvertStringToIndex (unsigned char *userCmd,
@@ -55,7 +59,8 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "dump",
 "Iwdg",
 "cantx",
-"getseed"
+"getseed",
+"tri2c1"
 };
 
 void handle_lpuart1_communication(void)
@@ -71,6 +76,14 @@ void handle_lpuart1_communication(void)
         first_time_only = 0;
         HAL_UART_Receive_IT(&hlpuart1, (unsigned char *) &new_char, 1);
         old_CAN_received_messages_counter = CAN_received_messages_counter;
+    }
+
+    if (I2C1_Error == 1)
+    {
+    	I2C1_Error = 0;
+        sprintf((char *) lpuart1_tx_buff, "I2C1 error!\n");
+         HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+
     }
 
     if (dump_mode == 0)
@@ -163,6 +176,9 @@ static void CommandLineMode (void)
         case 4: // getseed
             generate_rand_seed = 1;
             break;
+        case 5: // Transmit once via I2C1
+        	//Transmit_I2C1();
+        	break;
         default:
             if (comm_tokens.numOfTokens != 0)
             {
