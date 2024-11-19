@@ -13,8 +13,8 @@ Date: 05 October 2024
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_uart.h"
 #include "stm32g4xx_hal_rng.h"
-
-//#include "main.h"
+#include "AT24C256B_i2c_eeprom.h"
+#include "i2c1.h"
 /*****************************************/
 
 
@@ -60,7 +60,8 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "Iwdg",
 "cantx",
 "getseed",
-"tri2c1"
+"savesysconfig",
+"readsysconfig"
 };
 
 void handle_lpuart1_communication(void)
@@ -78,7 +79,7 @@ void handle_lpuart1_communication(void)
         old_CAN_received_messages_counter = CAN_received_messages_counter;
     }
 
-    if (I2C1_Error == 1)
+    if (I2C1_status() == 3)
     {
     	I2C1_Error = 0;
         sprintf((char *) lpuart1_tx_buff, "I2C1 error!\n");
@@ -177,7 +178,10 @@ static void CommandLineMode (void)
             generate_rand_seed = 1;
             break;
         case 5: // Transmit once via I2C1
-        	//Transmit_I2C1();
+        	save_sys_config();
+        	break;
+        case 6:
+        	restore_sys_config();
         	break;
         default:
             if (comm_tokens.numOfTokens != 0)

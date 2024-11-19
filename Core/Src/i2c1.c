@@ -48,12 +48,14 @@ void I2C1_tx_rx(uint16_t I2C1_DevAddr, uint16_t I2C1_msgSize, uint8_t opCode, ui
 	if (opCode == 1) // WRITE
     {
 		I2C1_transmit_buff_ptr = buf_ptr;
+		I2C1_Msg_size = I2C1_msgSize;
         I2C1_action = 1;
     }
 	else
     if(opCode == 2) // READ
     {
     	I2C1_receive_buff_ptr = buf_ptr;
+        I2C1_Msg_size = I2C1_msgSize;
     	I2C1_action = 2;
     }
 }

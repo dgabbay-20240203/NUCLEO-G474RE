@@ -39,10 +39,10 @@
  *
  * CRC32 code derived from work by Gary S. Brown.
  */
+#include "stm32g4xx_hal.h"
+#include "crc32.h"
 
-#include "../header/crc32.h"
-
-static const unsigned long crc32_tab[] = {
+static const uint32_t crc32_tab[] = {
 	0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
 	0xe963a535, 0x9e6495a3,	0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
 	0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91, 0x1db71064, 0x6ab020f2,
@@ -88,9 +88,9 @@ static const unsigned long crc32_tab[] = {
 	0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-unsigned long crc32(unsigned long crc, const unsigned char *buf, unsigned long size)
+uint32_t crc32(uint32_t crc, const uint8_t *buf, uint32_t size)
 {
-	const unsigned char *p;
+	const uint8_t *p;
 
 	p = buf;
 	crc = crc ^ ~0U;
