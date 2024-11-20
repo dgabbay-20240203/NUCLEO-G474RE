@@ -7,6 +7,7 @@ Creation date: 17 Nov 2024
 #include "stm32g4xx_hal.h"
 
 extern I2C_HandleTypeDef hi2c1;
+extern uint8_t reading_eeprom_page;
 
 uint8_t  I2C1_Error = 0;
 static uint8_t  I2C1_Transmit_done = 1;

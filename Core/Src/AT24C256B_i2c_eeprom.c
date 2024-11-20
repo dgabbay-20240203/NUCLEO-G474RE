@@ -8,9 +8,10 @@ Date: 17 Nov 2024
 #include "crc32.h"
 #include "i2c1.h"
 
-
+extern uint8_t reading_eeprom_page;
 extern I2C_HandleTypeDef hi2c1;
 struct sys_config sysConfig;
+uint8_t sysConfigInfoValid = 0;
 
 struct __attribute__((__packed__)) i2c_msgToTransmit {
     uint16_t mem_addr;
@@ -33,6 +34,7 @@ void save_sys_config(void)
 void restore_sys_config(void)
 {
 	buff.mem_addr = 0x0000; // Start address of EEPROM page 0, byte 0.
+	reading_eeprom_page = 1;
 	HAL_I2C_Master_Transmit(&hi2c1, 0xa0, (uint8_t *)&buff, 2,200); // This is blocking, it takes around 300 microseconds to complete.
 	I2C1_tx_rx(0xa1, sizeof(sysConfig), 2, (uint8_t *) &sysConfig); // This is non-blocking.
 }

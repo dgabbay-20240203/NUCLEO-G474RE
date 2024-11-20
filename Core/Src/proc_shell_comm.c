@@ -15,14 +15,18 @@ Date: 05 October 2024
 #include "stm32g4xx_hal_rng.h"
 #include "AT24C256B_i2c_eeprom.h"
 #include "i2c1.h"
+#include "crc32.h"
 /*****************************************/
 
-
+extern struct sys_config sysConfig;
 extern uint8_t  I2C1_Error;
+uint8_t reading_eeprom_page = 0;
+extern uint8_t sysConfigInfoValid;
 commandTokens comm_tokens;
 extern UART_HandleTypeDef hlpuart1;
 uint8_t new_char = 0;
 static uint8_t dump_mode = 0;
+static uint8_t i2c1_status = 0;
 static uint8_t generate_rand_seed = 0;
 uint8_t userPB;
 const unsigned char HELLO[] = "Message number:";
@@ -36,7 +40,7 @@ extern uint8_t RxData[12];
 extern FDCAN_RxHeaderTypeDef RxHeader;
 extern RNG_HandleTypeDef hrng;
 extern uint8_t SendMessage_IWDG_resetOccurred;
-
+extern const uint32_t header;
 
 void Transmit_I2C1(void);
 static void CommandLineMode (void);
@@ -61,7 +65,8 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "cantx",
 "getseed",
 "savesysconfig",
-"readsysconfig"
+"readsysconfig",
+"sn"
 };
 
 void handle_lpuart1_communication(void)
@@ -79,12 +84,30 @@ void handle_lpuart1_communication(void)
         old_CAN_received_messages_counter = CAN_received_messages_counter;
     }
 
-    if (I2C1_status() == 3)
-    {
-    	I2C1_Error = 0;
-        sprintf((char *) lpuart1_tx_buff, "I2C1 error!\n");
-         HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+    i2c1_status = I2C1_status();
 
+    if (i2c1_status == 3)
+    {
+        I2C1_Error = 0;
+        sprintf((char *) lpuart1_tx_buff, "I2C1 error!\n");
+        HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+        i2c1_status = 0;
+    }
+    else
+    if (i2c1_status == 2)
+    {
+        if (reading_eeprom_page == 1)
+        {
+            reading_eeprom_page = 0;
+            if ((sysConfig.crc32 == crc32(CRC32_SEED, (const uint8_t *) &sysConfig, sizeof(sysConfig) - 4)) && (sysConfig.header == header))
+            {
+                sysConfigInfoValid = 1;
+            }
+            else
+            {
+                sysConfigInfoValid = 0;
+            }
+        }
     }
 
     if (dump_mode == 0)
@@ -178,11 +201,26 @@ static void CommandLineMode (void)
             generate_rand_seed = 1;
             break;
         case 5: // Transmit once via I2C1
-        	save_sys_config();
-        	break;
+            save_sys_config();
+            break;
         case 6:
-        	restore_sys_config();
-        	break;
+            restore_sys_config();
+            break;
+        case 7: // sn - serial number
+            if (comm_tokens.numOfTokens == 1)
+            {
+                if (sysConfigInfoValid == 1)
+                {
+                    sprintf((char *) lpuart1_tx_buff, "Serial number: %lu\r\n", sysConfig.unit_serial_num);
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                }
+                else
+                {
+                    sprintf((char *) lpuart1_tx_buff, "Could not find valid serial number!\r\n");
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                }
+            }
+            break;
         default:
             if (comm_tokens.numOfTokens != 0)
             {
