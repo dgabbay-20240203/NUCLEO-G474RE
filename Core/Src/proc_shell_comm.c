@@ -51,6 +51,8 @@ unsigned char ConvertStringToIndex (unsigned char *userCmd,
 
 void commandLnTokens (commandTokens *commandTokensPtr, unsigned char *commandLnStr, unsigned char rx_buff_size);
 static void SwitchToDumpMode(commandTokens *commTokPtr);
+static unsigned char isNumber (const char *string);
+static unsigned char withInUn32BitRange(const char *string);
 
 uint8_t lpuart1_tx_buff[200];
 uint8_t lpuart1_rx_buff[200];
@@ -164,7 +166,7 @@ void handle_lpuart1_communication(void)
 static void CommandLineMode (void)
 {
     unsigned char i = 0;
-
+    char *ptr_end;
     if (SendMessage_IWDG_resetOccurred == 1)
     {
         SendMessage_IWDG_resetOccurred = 0;
@@ -217,6 +219,21 @@ static void CommandLineMode (void)
                 else
                 {
                     sprintf((char *) lpuart1_tx_buff, "Could not find valid serial number!\r\n");
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                }
+            }
+            else
+            if (comm_tokens.numOfTokens == 2)
+            {
+                if ((isNumber ((const char *) comm_tokens.commandTok[1]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[1]) == 1))
+                {
+                    sysConfig.unit_serial_num = strtoul((const char *) comm_tokens.commandTok[1], &ptr_end, 10);
+                    sprintf((char *) lpuart1_tx_buff, "\"sn\" was set to %lu\r\n", sysConfig.unit_serial_num);
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                }
+                else
+                {
+                    sprintf((char *) lpuart1_tx_buff, "Number is out of range!\r\n");
                     HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
                 }
             }
@@ -344,4 +361,23 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 
+static unsigned char isNumber (const char *string)
+{
+    unsigned char i=0;
+    while (*(string+i))
+    {
+        if (!((*(string+i)>=48)&&(*(string+i)<=57))) return (0);
+        i++;
+    }
+    return 1;
+}
 
+
+static unsigned char withInUn32BitRange(const char *string)
+{
+    unsigned char i;
+    if ((i=strlen(string))>10) return 0;
+    if (isNumber(string)==0) return 0;
+    if ((i==10)&&(strcmp(string, "4294967295")>0)) return (0);
+    return 1;
+}
