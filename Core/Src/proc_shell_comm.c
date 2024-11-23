@@ -170,6 +170,7 @@ static void CommandLineMode (void)
     unsigned char i = 0;
     char *ptr_end;
     uint8_t data;
+    uint32_t user_input;
     if (SendMessage_IWDG_resetOccurred == 1)
     {
         SendMessage_IWDG_resetOccurred = 0;
@@ -246,9 +247,10 @@ static void CommandLineMode (void)
             {
                 if ((isNumber ((const char *) comm_tokens.commandTok[1]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[1]) == 1))
                 {
-                    data = (uint8_t) strtoul((const char *) comm_tokens.commandTok[1], &ptr_end, 10);
-                    if (data < 64)
+                    user_input = strtoul((const char *) comm_tokens.commandTok[1], &ptr_end, 10);
+                    if (user_input < 64)
                     {
+                        data = (uint8_t) user_input;
                         // Sending a code in the range of 0 to 63 to the signal generator chip PCD3312C.
                         HAL_I2C_Master_Transmit(&hi2c1, 0x48, (uint8_t *)&data, 1, 200); // This is blocking, it takes around 205 microseconds to complete.
                     }
