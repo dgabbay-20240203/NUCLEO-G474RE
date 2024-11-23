@@ -41,6 +41,7 @@ extern FDCAN_RxHeaderTypeDef RxHeader;
 extern RNG_HandleTypeDef hrng;
 extern uint8_t SendMessage_IWDG_resetOccurred;
 extern const uint32_t header;
+extern I2C_HandleTypeDef hi2c1;
 
 void Transmit_I2C1(void);
 static void CommandLineMode (void);
@@ -68,7 +69,8 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "getseed",
 "savesysconfig",
 "readsysconfig",
-"sn"
+"sn",
+"tone"
 };
 
 void handle_lpuart1_communication(void)
@@ -167,6 +169,7 @@ static void CommandLineMode (void)
 {
     unsigned char i = 0;
     char *ptr_end;
+    uint8_t data;
     if (SendMessage_IWDG_resetOccurred == 1)
     {
         SendMessage_IWDG_resetOccurred = 0;
@@ -237,6 +240,31 @@ static void CommandLineMode (void)
                     HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
                 }
             }
+            break;
+        case 8:
+            if (comm_tokens.numOfTokens == 2)
+            {
+                if ((isNumber ((const char *) comm_tokens.commandTok[1]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[1]) == 1))
+                {
+                    data = (uint8_t) strtoul((const char *) comm_tokens.commandTok[1], &ptr_end, 10);
+                    if (data < 64)
+                    {
+                        // Sending a code in the range of 0 to 63 to the signal generator chip PCD3312C.
+                        HAL_I2C_Master_Transmit(&hi2c1, 0x48, (uint8_t *)&data, 1, 200); // This is blocking, it takes around 205 microseconds to complete.
+                    }
+                    else
+                    {
+                        sprintf((char *) lpuart1_tx_buff, "Command argument is out of range, must be in the range of 0 to 63.\r\n");
+                        HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                    }
+                }
+                else
+                {
+                    sprintf((char *) lpuart1_tx_buff, "Command argument is out of range, must be in the range of 0 to 63.\r\n");
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                }
+            }
+
             break;
         default:
             if (comm_tokens.numOfTokens != 0)
