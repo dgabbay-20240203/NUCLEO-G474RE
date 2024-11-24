@@ -252,7 +252,11 @@ static void CommandLineMode (void)
                     {
                         data = (uint8_t) user_input;
                         // Sending a code in the range of 0 to 63 to the signal generator chip PCD3312C.
-                        HAL_I2C_Master_Transmit(&hi2c1, 0x48, (uint8_t *)&data, 1, 200); // This is blocking, it takes around 205 microseconds to complete.
+                        if (HAL_I2C_Master_Transmit(&hi2c1, 0x48, (uint8_t *)&data, 1, 200) != HAL_OK) // This is blocking, it takes around 205 microseconds to complete.
+                        {
+                            sprintf((char *) lpuart1_tx_buff, "I2C1 error!\n");
+                            HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                        }
                     }
                     else
                     {
