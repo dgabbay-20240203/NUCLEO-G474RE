@@ -336,7 +336,7 @@ static uint8_t IsValidDtmfString(const uint8_t *dtmfStr)
 static uint8_t isDtmfChar(uint8_t ch)
 {
     if (((ch <= 0x39) && (ch >= 0x30)) ||
-        ((ch <= 0x45) && (ch >= 0x41)) ||
+        ((ch <= 0x44) && (ch >= 0x41)) ||
          (ch == '*')                   ||
          (ch == '#'))
     {
