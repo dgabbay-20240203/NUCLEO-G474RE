@@ -45,6 +45,8 @@ extern I2C_HandleTypeDef hi2c1;
 
 void Transmit_I2C1(void);
 static void CommandLineMode (void);
+static uint8_t isDtmfChar(uint8_t ch);
+static uint8_t IsValidDtmfString(const uint8_t *dtmfStr);
 
 unsigned char ConvertStringToIndex (unsigned char *userCmd,
                                     const unsigned char **commadModeFunctions,
@@ -70,7 +72,8 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "savesysconfig",
 "readsysconfig",
 "sn",
-"tone"
+"tone",
+"dtmf"
 };
 
 void handle_lpuart1_communication(void)
@@ -272,6 +275,25 @@ static void CommandLineMode (void)
             }
 
             break;
+        case 9:
+            if (comm_tokens.numOfTokens == 2)
+            {
+                if (IsValidDtmfString(comm_tokens.commandTok[1]) == 1)
+                {
+
+                }
+                else
+                {
+                    sprintf((char *) lpuart1_tx_buff, "Invalid DTMF string!\r\n");
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                }
+            }
+            else
+            {
+                sprintf((char *) lpuart1_tx_buff, "Incorrect number of arguments, must be exactly one argument!\r\n");
+                HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+            }
+            break;
         default:
             if (comm_tokens.numOfTokens != 0)
             {
@@ -296,6 +318,31 @@ static void ReportFirmwareVersion(void)
 {
     sprintf((char *) lpuart1_tx_buff, "Firmware version: 1.00, Build timestamp: %s %s \r\n", __DATE__, __TIME__);
     HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+}
+
+static uint8_t IsValidDtmfString(const uint8_t *dtmfStr)
+{
+    while (*dtmfStr != 0)
+    {
+        if (isDtmfChar(*dtmfStr) == 0)
+        {
+            return 0;
+        }
+        dtmfStr++;
+    }
+    return 1;
+}
+
+static uint8_t isDtmfChar(uint8_t ch)
+{
+    if (((ch <= 0x39) && (ch >= 0x30)) ||
+        ((ch <= 0x45) && (ch >= 0x41)) ||
+         (ch == '*')                   ||
+         (ch == '#'))
+    {
+        return 1;
+    }
+    return 0;
 }
 
 void Generate_256BIT_RandomSeed(void)
