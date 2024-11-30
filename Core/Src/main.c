@@ -36,6 +36,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
 void read_adc3_IN1(void);
 void Generate_256BIT_RandomSeed(void);
 void handleI2c1(void);
+void Quick_dtmf_dialer(void);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -149,6 +150,7 @@ int main(void)
   MX_RNG_Init();
   MX_I2C1_Init();
 
+
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
@@ -201,6 +203,7 @@ int main(void)
       read_adc3_IN1();
       Generate_256BIT_RandomSeed();
       handleI2c1();
+      Quick_dtmf_dialer();
 
       if ((CAN_Tx_enabled != 0) && (HAL_GetTick() - FDCAN_systemTickSnapshot) >= 100)
       {

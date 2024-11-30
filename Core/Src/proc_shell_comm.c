@@ -28,6 +28,7 @@ uint8_t new_char = 0;
 static uint8_t dump_mode = 0;
 static uint8_t i2c1_status = 0;
 static uint8_t generate_rand_seed = 0;
+static uint8_t dialer_state = 0;
 uint8_t userPB;
 const unsigned char HELLO[] = "Message number:";
 extern uint32_t adc3_IN3_voltage;
@@ -56,6 +57,8 @@ void commandLnTokens (commandTokens *commandTokensPtr, unsigned char *commandLnS
 static void SwitchToDumpMode(commandTokens *commTokPtr);
 static unsigned char isNumber (const char *string);
 static unsigned char withInUn32BitRange(const char *string);
+static uint8_t ConvertDtmfSymbolToCode(uint8_t ch);
+static uint8_t *dialer_str_ptr;
 
 uint8_t lpuart1_tx_buff[200];
 uint8_t lpuart1_rx_buff[200];
@@ -245,7 +248,7 @@ static void CommandLineMode (void)
                 }
             }
             break;
-        case 8:
+        case 8: // tone
             if (comm_tokens.numOfTokens == 2)
             {
                 if ((isNumber ((const char *) comm_tokens.commandTok[1]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[1]) == 1))
@@ -275,12 +278,13 @@ static void CommandLineMode (void)
             }
 
             break;
-        case 9:
+        case 9: // dtmf
             if (comm_tokens.numOfTokens == 2)
             {
                 if (IsValidDtmfString(comm_tokens.commandTok[1]) == 1)
                 {
-
+                    dialer_state = 1; // Start "dtmf" quick dialing.
+                    dialer_str_ptr = (uint8_t *) comm_tokens.commandTok[1];
                 }
                 else
                 {
@@ -303,6 +307,69 @@ static void CommandLineMode (void)
             break;
         }
     }
+}
+
+void Quick_dtmf_dialer(void)
+{
+    static uint32_t dialer_time_stamp = 0;
+    uint8_t dtmfCode;
+    if (dialer_state == 0)
+    {
+        return;
+    }
+
+    switch(dialer_state)
+    {
+    case 1:
+        dtmfCode = ConvertDtmfSymbolToCode(*dialer_str_ptr);
+        if (HAL_I2C_Master_Transmit(&hi2c1, 0x48, (uint8_t *)&dtmfCode, 1, 200) != HAL_OK) // This is blocking, it takes around 205 microseconds to complete.
+        {
+            sprintf((char *) lpuart1_tx_buff, "I2C1 error!\n");
+            HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+            dialer_state = 0;
+        }
+        else
+        {
+            dialer_time_stamp = HAL_GetTick();
+            dialer_state = 2;
+            dialer_str_ptr++;
+        }
+        break;
+    case 2:
+        if (HAL_GetTick() - dialer_time_stamp > 55)
+        {
+            dtmfCode = 0; // Turn off
+            if (HAL_I2C_Master_Transmit(&hi2c1, 0x48, (uint8_t *)&dtmfCode, 1, 200) != HAL_OK) // This is blocking, it takes around 205 microseconds to complete.
+            {
+                sprintf((char *) lpuart1_tx_buff, "I2C1 error!\n");
+                HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                dialer_state = 0;
+            }
+            else
+            {
+                if (*dialer_str_ptr != 0)
+                {
+                    dialer_time_stamp = HAL_GetTick();
+                    dialer_state = 3;
+                }
+                else
+                {
+                    dialer_state = 0;
+                }
+            }
+        }
+        break;
+    case 3:
+        if (HAL_GetTick() - dialer_time_stamp > 55)
+        {
+            dialer_state = 1;
+        }
+        break;
+    default:
+        dialer_state = 0;
+        break;
+    }
+
 }
 
 static void SwitchToDumpMode(commandTokens *commTokPtr)
@@ -341,6 +408,31 @@ static uint8_t isDtmfChar(uint8_t ch)
          (ch == '#'))
     {
         return 1;
+    }
+    return 0;
+}
+
+
+static uint8_t ConvertDtmfSymbolToCode(uint8_t ch)
+{
+    if ((ch <= 0x39) && (ch >= 0x30))
+    {
+        return ch - 32;
+    }
+
+    if ((ch <= 0x44) && (ch >= 0x41))
+    {
+        return ch - 50;
+    }
+
+    if (ch == '*')
+    {
+        return 0x1e;
+    }
+
+    if (ch == '#')
+    {
+        return 0x1f;
     }
     return 0;
 }
