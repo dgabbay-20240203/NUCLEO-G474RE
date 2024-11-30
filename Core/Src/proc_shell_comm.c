@@ -336,7 +336,7 @@ void Quick_dtmf_dialer(void)
         }
         break;
     case 2:
-        if (HAL_GetTick() - dialer_time_stamp > 55)
+        if (HAL_GetTick() - dialer_time_stamp > 45)
         {
             dtmfCode = 0; // Turn off
             if (HAL_I2C_Master_Transmit(&hi2c1, 0x48, (uint8_t *)&dtmfCode, 1, 200) != HAL_OK) // This is blocking, it takes around 205 microseconds to complete.
@@ -360,7 +360,7 @@ void Quick_dtmf_dialer(void)
         }
         break;
     case 3:
-        if (HAL_GetTick() - dialer_time_stamp > 55)
+        if (HAL_GetTick() - dialer_time_stamp > 45)
         {
             dialer_state = 1;
         }
