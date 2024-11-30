@@ -422,7 +422,7 @@ static uint8_t ConvertDtmfSymbolToCode(uint8_t ch)
 
     if ((ch <= 0x44) && (ch >= 0x41))
     {
-        return ch - 50;
+        return ch - 0x27;
     }
 
     if (ch == '*')
