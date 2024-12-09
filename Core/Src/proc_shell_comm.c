@@ -29,6 +29,8 @@ static uint8_t dump_mode = 0;
 static uint8_t i2c1_status = 0;
 static uint8_t generate_rand_seed = 0;
 static uint8_t dialer_state = 0;
+static uint16_t dtmf_on_time = 45;
+static uint16_t dtmf_off_time = 45;
 uint8_t userPB;
 const unsigned char HELLO[] = "Message number:";
 extern uint32_t adc3_IN3_voltage;
@@ -336,7 +338,7 @@ void Quick_dtmf_dialer(void)
         }
         break;
     case 2:
-        if (HAL_GetTick() - dialer_time_stamp > 45)
+        if (HAL_GetTick() - dialer_time_stamp > dtmf_on_time)
         {
             dtmfCode = 0; // Turn off
             if (HAL_I2C_Master_Transmit(&hi2c1, 0x48, (uint8_t *)&dtmfCode, 1, 200) != HAL_OK) // This is blocking, it takes around 205 microseconds to complete.
@@ -360,7 +362,7 @@ void Quick_dtmf_dialer(void)
         }
         break;
     case 3:
-        if (HAL_GetTick() - dialer_time_stamp > 45)
+        if (HAL_GetTick() - dialer_time_stamp > dtmf_off_time)
         {
             dialer_state = 1;
         }
