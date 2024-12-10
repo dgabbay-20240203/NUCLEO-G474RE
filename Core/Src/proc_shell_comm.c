@@ -78,7 +78,8 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "readsysconfig",
 "sn",
 "tone",
-"dtmf"
+"dtmf",
+"setdtmftm"
 };
 
 void handle_lpuart1_communication(void)
@@ -297,6 +298,32 @@ static void CommandLineMode (void)
             else
             {
                 sprintf((char *) lpuart1_tx_buff, "Incorrect number of arguments, must be exactly one argument!\r\n");
+                HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+            }
+            break;
+        case 10: // setdtmftm
+            if (comm_tokens.numOfTokens == 3)
+            {
+                if ((isNumber ((const char *) comm_tokens.commandTok[1]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[1]) == 1) &&
+                    (isNumber ((const char *) comm_tokens.commandTok[2]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[2]) == 1))
+                {
+                    user_input = strtoul((const char *) comm_tokens.commandTok[1], &ptr_end, 10);
+                    if ((user_input >= 45) && (user_input <= 1000))
+                    {
+                        dtmf_on_time = (uint16_t) user_input;
+                    }
+
+                    user_input = strtoul((const char *) comm_tokens.commandTok[2], &ptr_end, 10);
+                    if ((user_input >= 45) && (user_input <= 500))
+                    {
+                        dtmf_off_time = (uint16_t) user_input;
+                    }
+                }
+            }
+            else
+            if (comm_tokens.numOfTokens == 1)
+            {
+                sprintf((char *) lpuart1_tx_buff, "[dtmf_on_time, dtmf_off_time] = [%d, %d]\r\n", dtmf_on_time, dtmf_off_time);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
             break;
