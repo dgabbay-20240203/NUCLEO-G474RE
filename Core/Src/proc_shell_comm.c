@@ -13,11 +13,12 @@ Date: 05 October 2024
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_uart.h"
 #include "stm32g4xx_hal_rng.h"
+#include "stm32g4xx_hal_rtc.h"
 #include "AT24C256B_i2c_eeprom.h"
 #include "i2c1.h"
 #include "crc32.h"
 /*****************************************/
-
+void Error_Handler(void);
 extern struct sys_config sysConfig;
 extern uint8_t  I2C1_Error;
 uint8_t reading_eeprom_page = 0;
@@ -45,8 +46,12 @@ extern RNG_HandleTypeDef hrng;
 extern uint8_t SendMessage_IWDG_resetOccurred;
 extern const uint32_t header;
 extern I2C_HandleTypeDef hi2c1;
+extern RTC_HandleTypeDef hrtc;
 
 void Transmit_I2C1(void);
+void Set_RTC_time_date(void);
+void Get_RTC_time_date(void);
+
 static void CommandLineMode (void);
 static uint8_t isDtmfChar(uint8_t ch);
 static uint8_t IsValidDtmfString(const uint8_t *dtmfStr);
@@ -61,6 +66,10 @@ static unsigned char isNumber (const char *string);
 static unsigned char withInUn32BitRange(const char *string);
 static uint8_t ConvertDtmfSymbolToCode(uint8_t ch);
 static uint8_t *dialer_str_ptr;
+
+static RTC_TimeTypeDef sTime = {0};
+static RTC_DateTypeDef sDate = {0};
+
 
 uint8_t lpuart1_tx_buff[200];
 uint8_t lpuart1_rx_buff[200];
@@ -79,7 +88,9 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "sn",
 "tone",
 "dtmf",
-"setdtmftm"
+"setdtmftm",
+"setrtc",
+"readrtc"
 };
 
 void handle_lpuart1_communication(void)
@@ -326,6 +337,39 @@ static void CommandLineMode (void)
                 sprintf((char *) lpuart1_tx_buff, "[dtmf_on_time, dtmf_off_time] = [%d, %d]\r\n", dtmf_on_time, dtmf_off_time);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
+            break;
+        case 11: // setrtc YYYY MON Day Hours (24 mode) MIN SEC
+            if (comm_tokens.numOfTokens == 7)
+            {
+                if ((isNumber ((const char *) comm_tokens.commandTok[1]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[1]) == 1) &&
+                    (isNumber ((const char *) comm_tokens.commandTok[2]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[2]) == 1) &&
+                    (isNumber ((const char *) comm_tokens.commandTok[3]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[3]) == 1) &&
+                    (isNumber ((const char *) comm_tokens.commandTok[4]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[4]) == 1) &&
+                    (isNumber ((const char *) comm_tokens.commandTok[5]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[5]) == 1) &&
+                    (isNumber ((const char *) comm_tokens.commandTok[6]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[6]) == 1))
+                {
+                    sTime.Hours =   (uint8_t) strtoul((const char *) comm_tokens.commandTok[4], &ptr_end, 10);
+                    sTime.Minutes = (uint8_t) strtoul((const char *) comm_tokens.commandTok[5], &ptr_end, 10);
+                    sTime.Seconds = (uint8_t) strtoul((const char *) comm_tokens.commandTok[6], &ptr_end, 10);
+                    sDate.Year =    (uint8_t)(strtoul((const char *) comm_tokens.commandTok[1], &ptr_end, 10) - 2000);
+                    sDate.Month =   (uint8_t) strtoul((const char *) comm_tokens.commandTok[2], &ptr_end, 10);
+                    sDate.Date =    (uint8_t) strtoul((const char *) comm_tokens.commandTok[3], &ptr_end, 10);
+                    Set_RTC_time_date();
+                    sprintf((char *) lpuart1_tx_buff, "RTC was set to %04d-%02d-%02d %02d:%02d:%02d UTC\r\n", sDate.Year + 2000, sDate.Month, sDate.Date,
+                                                                                                  sTime.Hours, sTime.Minutes, sTime.Seconds);
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+                }
+            }
+            break;
+        case 12: // readrtc
+            if (comm_tokens.numOfTokens == 1)
+            {
+                Get_RTC_time_date();
+                sprintf((char *) lpuart1_tx_buff, "%04d-%02d-%02d %02d:%02d:%02d UTC\r\n", sDate.Year + 2000, sDate.Month, sDate.Date,
+                                                                                              sTime.Hours, sTime.Minutes, sTime.Seconds);
+                HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+            }
+
             break;
         default:
             if (comm_tokens.numOfTokens != 0)
@@ -583,3 +627,30 @@ static unsigned char withInUn32BitRange(const char *string)
     if ((i==10)&&(strcmp(string, "4294967295")>0)) return (0);
     return 1;
 }
+
+
+void Set_RTC_time_date(void)
+{
+    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+void Get_RTC_time_date(void)
+{
+    if (HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    if (HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
