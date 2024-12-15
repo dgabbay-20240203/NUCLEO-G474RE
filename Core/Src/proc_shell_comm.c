@@ -90,8 +90,7 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "tone",
 "dtmf",
 "setdtmftm",
-"setrtc",
-"readrtc",
+"rtc",
 "unixtime"
 };
 
@@ -342,8 +341,8 @@ static void CommandLineMode (void)
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
             break;
-        case 11: // setrtc YYYY MON Day Hours (24 mode) MIN SEC
-            if (comm_tokens.numOfTokens == 7)
+        case 11:
+            if (comm_tokens.numOfTokens == 7) // rtc YYYY MON Day Hours (24 mode) MIN SEC
             {
                 if ((isNumber ((const char *) comm_tokens.commandTok[1]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[1]) == 1) &&
                     (isNumber ((const char *) comm_tokens.commandTok[2]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[2]) == 1) &&
@@ -364,18 +363,16 @@ static void CommandLineMode (void)
                     HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
                 }
             }
-            break;
-        case 12: // readrtc
-            if (comm_tokens.numOfTokens == 1)
+            else
+            if (comm_tokens.numOfTokens == 1) // rtc
             {
                 Get_RTC_time_date();
                 sprintf((char *) lpuart1_tx_buff, "%04d-%02d-%02d %02d:%02d:%02d UTC\r\n", sDate.Year + 2000, sDate.Month, sDate.Date,
                                                                                               sTime.Hours, sTime.Minutes, sTime.Seconds);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
-
             break;
-        case 13: // unixtime
+        case 12: // unixtime
             Get_RTC_time_date();
             tm.year = sDate.Year + 2000;
             tm.month = sDate.Month;
