@@ -9,7 +9,7 @@ Device P/N: DSPIC33EP128MC202 (Microchip Technology)
 #ifndef PROC_SHELL_COMM_H
 #define PROC_SHELL_COMM_H
 
-#define NUM_OF_COM 13 // Must equal to the number of commands.
+#define NUM_OF_COM 14 // Must equal to the number of commands.
 #define MAX_NUM_OF_COMMAND_TOKENS 17
 
 #define CTRL_C    0x03

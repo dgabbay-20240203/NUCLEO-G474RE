@@ -17,6 +17,7 @@ Date: 05 October 2024
 #include "AT24C256B_i2c_eeprom.h"
 #include "i2c1.h"
 #include "crc32.h"
+#include "unix_time_functions.h"
 /*****************************************/
 void Error_Handler(void);
 extern struct sys_config sysConfig;
@@ -90,7 +91,8 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "dtmf",
 "setdtmftm",
 "setrtc",
-"readrtc"
+"readrtc",
+"unixtime"
 };
 
 void handle_lpuart1_communication(void)
@@ -191,6 +193,8 @@ static void CommandLineMode (void)
     char *ptr_end;
     uint8_t data;
     uint32_t user_input;
+    uint32_t unix_time;
+    struct time_stamp tm;
     if (SendMessage_IWDG_resetOccurred == 1)
     {
         SendMessage_IWDG_resetOccurred = 0;
@@ -370,6 +374,18 @@ static void CommandLineMode (void)
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
 
+            break;
+        case 13: // unixtime
+            Get_RTC_time_date();
+            tm.year = sDate.Year + 2000;
+            tm.month = sDate.Month;
+            tm.day = sDate.Date;
+            tm.hr = sTime.Hours;
+            tm.min = sTime.Minutes;
+            tm.sec = sTime.Seconds;
+            unix_time = TimeInSecondsSinceT_ZERO2(&tm);
+            sprintf((char *) lpuart1_tx_buff, "%lu\r\n", unix_time);
+            HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             break;
         default:
             if (comm_tokens.numOfTokens != 0)
