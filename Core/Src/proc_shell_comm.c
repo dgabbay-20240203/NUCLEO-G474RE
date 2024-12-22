@@ -91,7 +91,7 @@ const char * const commadModeFunctions[NUM_OF_COM]= {
 "dtmf",
 "setdtmftm",
 "rtc",
-"unixtime"
+"unix"
 };
 
 void handle_lpuart1_communication(void)
