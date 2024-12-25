@@ -21,7 +21,7 @@ void read_adc3_IN1(void)
         if (conversionIsReay == 1)
         {
             adc_val = HAL_ADC_GetValue(&hadc3);
-            adc3_IN3_voltage = (adc_val * 33 * 10) / 4095;
+            adc3_IN3_voltage = __HAL_ADC_CALC_DATA_TO_VOLTAGE(3300, adc_val, ADC_RESOLUTION_12B); // 3300 is VREF in mV.
             conversionIsReay = 0;
             HAL_ADC_Start_IT(&hadc3);
         }

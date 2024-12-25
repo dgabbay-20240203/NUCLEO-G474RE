@@ -157,7 +157,7 @@ void handle_lpuart1_communication(void)
 
                 systemTickSnapshot = HAL_GetTick();
                 msgCounter++;
-                sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, adc3_IN3_voltage = %lu.%luV, adc_val = %lu\n", HELLO, msgCounter, userPB, adc3_IN3_voltage /100,adc3_IN3_voltage % 100 , adc_val);
+                sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, adc3_IN3_voltage = %lu.%03luV, adc_val = %lu\n", HELLO, msgCounter, userPB, adc3_IN3_voltage /1000,adc3_IN3_voltage % 1000 , adc_val);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
                 break;
