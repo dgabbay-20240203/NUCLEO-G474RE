@@ -68,8 +68,8 @@ static unsigned char withInUn32BitRange(const char *string);
 static uint8_t ConvertDtmfSymbolToCode(uint8_t ch);
 static uint8_t *dialer_str_ptr;
 
-static RTC_TimeTypeDef sTime = {0};
-static RTC_DateTypeDef sDate = {0};
+RTC_TimeTypeDef sTime = {0};
+RTC_DateTypeDef sDate = {0};
 
 
 uint8_t lpuart1_tx_buff[200];
