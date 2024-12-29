@@ -322,13 +322,13 @@ static void CommandLineMode (void)
                     (isNumber ((const char *) comm_tokens.commandTok[2]) == 1) && (withInUn32BitRange((const char *) comm_tokens.commandTok[2]) == 1))
                 {
                     user_input = strtoul((const char *) comm_tokens.commandTok[1], &ptr_end, 10);
-                    if ((user_input >= 45) && (user_input <= 1000))
+                    if ((user_input >= 40) && (user_input <= 1000))
                     {
                         dtmf_on_time = (uint16_t) user_input;
                     }
 
                     user_input = strtoul((const char *) comm_tokens.commandTok[2], &ptr_end, 10);
-                    if ((user_input >= 45) && (user_input <= 500))
+                    if ((user_input >= 20) && (user_input <= 500))
                     {
                         dtmf_off_time = (uint16_t) user_input;
                     }
