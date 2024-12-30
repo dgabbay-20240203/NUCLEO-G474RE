@@ -18,6 +18,7 @@ Date: 05 October 2024
 #include "i2c1.h"
 #include "crc32.h"
 #include "unix_time_functions.h"
+#include "main.h"
 /*****************************************/
 void Error_Handler(void);
 extern struct sys_config sysConfig;
@@ -33,6 +34,7 @@ static uint8_t generate_rand_seed = 0;
 static uint8_t dialer_state = 0;
 static uint16_t dtmf_on_time = 45;
 static uint16_t dtmf_off_time = 45;
+static uint8_t print_dtmf_symbol = 0;
 uint8_t userPB;
 const unsigned char HELLO[] = "Message number:";
 extern uint32_t adc3_IN3_voltage;
@@ -399,6 +401,12 @@ void Quick_dtmf_dialer(void)
 {
     static uint32_t dialer_time_stamp = 0;
     uint8_t dtmfCode;
+    if (print_dtmf_symbol == 1)
+    {
+        print_dtmf_symbol = 0;
+        sprintf((char *) lpuart1_tx_buff, "Printing DTMF symbol!\r\n");
+        HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
+    }
     if (dialer_state == 0)
     {
         return;
@@ -667,3 +675,16 @@ void Get_RTC_time_date(void)
     }
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(GPIO_Pin);
+  if (GPIO_Pin == dtmf_StD_Pin)
+  {
+      print_dtmf_symbol = 1;
+  }
+
+  /* NOTE: This function should not be modified, when the callback is needed,
+            the HAL_GPIO_EXTI_Callback could be implemented in the user file
+   */
+}
