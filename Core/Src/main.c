@@ -651,6 +651,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USER_PB_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : dtmfRec_Q1_Pin dtmfRec_Q2_Pin dtmfReq_Q3_Pin dtmfRec_Q4_Pin */
+  GPIO_InitStruct.Pin = dtmfRec_Q1_Pin|dtmfRec_Q2_Pin|dtmfReq_Q3_Pin|dtmfRec_Q4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pin : USER_LED_Pin */
   GPIO_InitStruct.Pin = USER_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;

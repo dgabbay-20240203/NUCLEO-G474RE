@@ -35,6 +35,8 @@ static uint8_t dialer_state = 0;
 static uint16_t dtmf_on_time = 45;
 static uint16_t dtmf_off_time = 45;
 static uint8_t print_dtmf_symbol = 0;
+static const uint8_t dtmfSymbols[16] = {'D', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '*', '#', 'A', 'B', 'C'};
+uint8_t dtmf_symbol;
 uint8_t userPB;
 const unsigned char HELLO[] = "Message number:";
 extern uint32_t adc3_IN3_voltage;
@@ -404,7 +406,9 @@ void Quick_dtmf_dialer(void)
     if (print_dtmf_symbol == 1)
     {
         print_dtmf_symbol = 0;
-        sprintf((char *) lpuart1_tx_buff, "Printing DTMF symbol!\r\n");
+        dtmf_symbol = dtmfSymbols[dtmf_symbol];
+
+        sprintf((char *) lpuart1_tx_buff, "%c\n", dtmf_symbol);
         HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
     }
     if (dialer_state == 0)
@@ -682,6 +686,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin == dtmf_StD_Pin)
   {
       print_dtmf_symbol = 1;
+      dtmf_symbol = 0;
+      if (HAL_GPIO_ReadPin(dtmfRec_Q1_GPIO_Port, dtmfRec_Q1_Pin) == 1)
+      {
+          dtmf_symbol |= 0x01;
+      }
+      if (HAL_GPIO_ReadPin(dtmfRec_Q2_GPIO_Port, dtmfRec_Q2_Pin) == 1)
+      {
+          dtmf_symbol |= 0x02;
+      }
+      if (HAL_GPIO_ReadPin(dtmfReq_Q3_GPIO_Port, dtmfReq_Q3_Pin) == 1)
+      {
+          dtmf_symbol |= 0x04;
+      }
+      if (HAL_GPIO_ReadPin(dtmfRec_Q4_GPIO_Port, dtmfRec_Q4_Pin) == 1)
+      {
+          dtmf_symbol |= 0x08;
+      }
   }
 
   /* NOTE: This function should not be modified, when the callback is needed,

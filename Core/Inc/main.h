@@ -59,11 +59,19 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define USER_PB_Pin GPIO_PIN_13
 #define USER_PB_GPIO_Port GPIOC
+#define dtmfRec_Q1_Pin GPIO_PIN_2
+#define dtmfRec_Q1_GPIO_Port GPIOC
 #define USER_LED_Pin GPIO_PIN_5
 #define USER_LED_GPIO_Port GPIOA
 #define dtmf_StD_Pin GPIO_PIN_2
 #define dtmf_StD_GPIO_Port GPIOB
 #define dtmf_StD_EXTI_IRQn EXTI2_IRQn
+#define dtmfRec_Q2_Pin GPIO_PIN_6
+#define dtmfRec_Q2_GPIO_Port GPIOC
+#define dtmfReq_Q3_Pin GPIO_PIN_8
+#define dtmfReq_Q3_GPIO_Port GPIOC
+#define dtmfRec_Q4_Pin GPIO_PIN_10
+#define dtmfRec_Q4_GPIO_Port GPIOC
 
 /* USER CODE BEGIN Private defines */
 
