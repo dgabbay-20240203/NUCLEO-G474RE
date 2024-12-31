@@ -306,6 +306,8 @@ static void CommandLineMode (void)
                 {
                     dialer_state = 1; // Start "dtmf" quick dialing.
                     dialer_str_ptr = (uint8_t *) comm_tokens.commandTok[1];
+                    sprintf((char *) lpuart1_tx_buff, "     ");
+                    HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
                 }
                 else
                 {
