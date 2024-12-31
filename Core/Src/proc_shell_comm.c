@@ -408,7 +408,7 @@ void Quick_dtmf_dialer(void)
         print_dtmf_symbol = 0;
         dtmf_symbol = dtmfSymbols[dtmf_symbol];
 
-        sprintf((char *) lpuart1_tx_buff, "%c\n", dtmf_symbol);
+        sprintf((char *) lpuart1_tx_buff, "%c", dtmf_symbol);
         HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
     }
     if (dialer_state == 0)
