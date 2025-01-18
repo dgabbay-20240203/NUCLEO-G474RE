@@ -39,7 +39,7 @@ static const uint8_t dtmfSymbols[16] = {'D', '1', '2', '3', '4', '5', '6', '7', 
 uint8_t dtmf_symbol;
 uint8_t userPB;
 const unsigned char HELLO[] = "Message number:";
-extern uint32_t adc3_IN3_voltage;
+extern uint32_t adc3_5_1[2];
 extern uint32_t adc_val;
 extern uint8_t IWDG_refreshEnabled;
 extern uint32_t CAN_received_messages_counter;
@@ -52,6 +52,7 @@ extern uint8_t SendMessage_IWDG_resetOccurred;
 extern const uint32_t header;
 extern I2C_HandleTypeDef hi2c1;
 extern RTC_HandleTypeDef hrtc;
+extern uint32_t adc_raw[2];
 
 void Transmit_I2C1(void);
 void Set_RTC_time_date(void);
@@ -161,7 +162,7 @@ void handle_lpuart1_communication(void)
 
                 systemTickSnapshot = HAL_GetTick();
                 msgCounter++;
-                sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, adc3_IN3_voltage = %lu.%03luV, adc_val = %lu\n", HELLO, msgCounter, userPB, adc3_IN3_voltage /1000,adc3_IN3_voltage % 1000 , adc_val);
+                sprintf((char *) lpuart1_tx_buff, "%s %lu, userPB = %d, %lu.%03luV, %lu.%03luV\n", HELLO, msgCounter, userPB, adc3_5_1[0] /1000,adc3_5_1[0] % 1000, adc3_5_1[1] /1000,adc3_5_1[1] % 1000);
                 HAL_UART_Transmit_IT(&hlpuart1, lpuart1_tx_buff, strlen((const char *)lpuart1_tx_buff));
             }
                 break;

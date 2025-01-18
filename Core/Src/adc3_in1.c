@@ -6,44 +6,36 @@ uint32_t count_HAL_ADC_ConvCpltCallback = 0;
 uint8_t conversionIsReay = 0;
 extern ADC_HandleTypeDef hadc3;
 uint32_t ADC3_systemTickSnapshot = 0;
-uint32_t adc_val;
-uint32_t adc3_IN3_voltage;
-uint32_t timer = 0;
+uint32_t adc_raw[2];
+uint32_t adc3_5_1[2];
 
 void read_adc3_IN1(void)
 {
-	// The sampling rate is approximately 2000 samples/ second.
-    if (timer < SAMPLE_PERIOD) timer++;
-    else
+    if (conversionIsReay == 1)
     {
-        timer = 0;
+
+        adc3_5_1[0] = __HAL_ADC_CALC_DATA_TO_VOLTAGE(3300, adc_raw[0], ADC_RESOLUTION_12B); // 3300 is VREF in mV.
+        adc3_5_1[1] = __HAL_ADC_CALC_DATA_TO_VOLTAGE(3300, adc_raw[1], ADC_RESOLUTION_12B); // 3300 is VREF in mV.
+        conversionIsReay = 0;
+    }
+
+    if (HAL_GetTick() - ADC3_systemTickSnapshot > 3)
+    {
+        HAL_ADC_Start_IT(&hadc3);
         ADC3_systemTickSnapshot = HAL_GetTick();
-        if (conversionIsReay == 1)
-        {
-            adc_val = HAL_ADC_GetValue(&hadc3);
-            adc3_IN3_voltage = __HAL_ADC_CALC_DATA_TO_VOLTAGE(3300, adc_val, ADC_RESOLUTION_12B); // 3300 is VREF in mV.
-            conversionIsReay = 0;
-            HAL_ADC_Start_IT(&hadc3);
-        }
     }
 }
 
-
-
-
-
-
-
-
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(hadc);
-  count_HAL_ADC_ConvCpltCallback++;
-  conversionIsReay = 1;
-
-  /* NOTE : This function should not be modified. When the callback is needed,
-            function HAL_ADC_ConvCpltCallback must be implemented in the user file.
-   */
+    /* Prevent unused argument(s) compilation warning */
+    UNUSED(hadc);
+    static uint8_t i = 0;
+    adc_raw[i] = HAL_ADC_GetValue(&hadc3);
+    if (i < 1) i++;
+    else
+    {
+        i = 0;
+        conversionIsReay = 1;
+    }
 }
-
