@@ -13,16 +13,10 @@ void read_adc3_IN1(void)
 {
     if (conversionIsReay == 1)
     {
-
+        conversionIsReay = 0;
         adc3_5_1[0] = __HAL_ADC_CALC_DATA_TO_VOLTAGE(3300, adc_raw[0], ADC_RESOLUTION_12B); // 3300 is VREF in mV.
         adc3_5_1[1] = __HAL_ADC_CALC_DATA_TO_VOLTAGE(3300, adc_raw[1], ADC_RESOLUTION_12B); // 3300 is VREF in mV.
-        conversionIsReay = 0;
-    }
-
-    if (HAL_GetTick() - ADC3_systemTickSnapshot > 3)
-    {
         HAL_ADC_Start_IT(&hadc3);
-        ADC3_systemTickSnapshot = HAL_GetTick();
     }
 }
 
@@ -39,3 +33,4 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
         conversionIsReay = 1;
     }
 }
+
