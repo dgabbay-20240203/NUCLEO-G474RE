@@ -478,6 +478,7 @@ static void MX_IWDG_Init(void)
   /* USER CODE BEGIN IWDG_Init 1 */
 
   /* USER CODE END IWDG_Init 1 */
+#ifdef ENABLE_IWDG
   hiwdg.Instance = IWDG;
   hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
   hiwdg.Init.Window = 4095;
@@ -486,6 +487,7 @@ static void MX_IWDG_Init(void)
   {
     Error_Handler();
   }
+#endif
   /* USER CODE BEGIN IWDG_Init 2 */
 
   /* USER CODE END IWDG_Init 2 */
