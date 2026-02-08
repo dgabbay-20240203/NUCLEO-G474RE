@@ -191,6 +191,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+#ifdef ENABLE_IWDG
       if (IWDG_refreshEnabled != 0)
       {
           if ((HAL_GetTick() - IWGD_systemTickSnapshot) >= 100)
@@ -201,6 +202,7 @@ int main(void)
               HAL_IWDG_Refresh(&hiwdg);
           }
       }
+#endif
 	  ToggleHeartbeatLED();
       handle_lpuart1_communication();
       read_adc3_IN1();
