@@ -106,11 +106,11 @@ uint32_t crc32(uint32_t crc, const uint8_t *buf, uint32_t size)
 
 // The two functions are equivalent. The loop method does not use a table.
 // It is slower but takes less program memory.
-uint32_t crc32_Loop_method(const char *s,size_t n) {
+uint32_t crc32_Loop_method(const uint8_t *s,size_t n) {
 	uint32_t crc=0xFFFFFFFF;
 
 	for(size_t i=0;i<n;i++) {
-		char ch=s[i];
+		uint8_t ch=s[i];
 		for(size_t j=0;j<8;j++) {
 			uint32_t b=(ch^crc)&1;
 			crc>>=1;
